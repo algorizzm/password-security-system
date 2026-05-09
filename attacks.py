@@ -22,7 +22,7 @@ class DictionaryAttack:
         except FileNotFoundError:
             return []
 
-    def attack(self, username, login_system, callback=None):
+    def attack(self, username, login_system, callback=None, stop_event=None):
         """
         Attempt dictionary attack on a user account.
 
@@ -31,6 +31,7 @@ class DictionaryAttack:
             login_system: LoginSystem instance
             callback: Optional function called with progress updates
                      callback(attempts, elapsed_time, success, cracked_password)
+            stop_event: Optional threading.Event to signal early stop
 
         Returns: (success: bool, attempts: int, elapsed_time: float, cracked_password: str or None)
         """
@@ -41,6 +42,10 @@ class DictionaryAttack:
         attempts = 0
 
         for password in self.wordlist:
+            if stop_event and stop_event.is_set():
+                elapsed = time.time() - start_time
+                return False, attempts, elapsed, None
+
             attempts += 1
             success, _ = login_system.login_user(username, password)
 
@@ -76,7 +81,7 @@ class BruteForceAttack:
         self.max_length = max_length
         self.charset = charset
 
-    def attack(self, username, login_system, callback=None):
+    def attack(self, username, login_system, callback=None, stop_event=None):
         """
         Attempt brute-force attack on a user account.
 
@@ -85,6 +90,7 @@ class BruteForceAttack:
             login_system: LoginSystem instance
             callback: Optional function for progress updates
                      callback(attempts, elapsed_time, current_attempt, success, cracked_password)
+            stop_event: Optional threading.Event to signal early stop
 
         Returns: (success: bool, attempts: int, elapsed_time: float, cracked_password: str or None)
         """
@@ -93,6 +99,10 @@ class BruteForceAttack:
 
         for length in range(1, self.max_length + 1):
             for attempt in itertools.product(self.charset, repeat=length):
+                if stop_event and stop_event.is_set():
+                    elapsed = time.time() - start_time
+                    return False, attempts, elapsed, None
+
                 password = ''.join(attempt)
                 attempts += 1
 
