@@ -76,11 +76,24 @@ class PasswordDefenseSimulator:
         self.reg_username = ttk.Entry(parent, width=30)
         self.reg_username.grid(row=0, column=1, sticky=tk.EW, pady=5)
 
-        # Password
+        # Password with show/hide button
         ttk.Label(parent, text="Password:").grid(row=1, column=0, sticky=tk.W, pady=5)
-        self.reg_password = ttk.Entry(parent, width=30, show="*")
-        self.reg_password.grid(row=1, column=1, sticky=tk.EW, pady=5)
+
+        password_frame = ttk.Frame(parent)
+        password_frame.grid(row=1, column=1, sticky=tk.EW, pady=5)
+
+        self.reg_password = ttk.Entry(password_frame, width=30, show="*")
+        self.reg_password.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
         self.reg_password.bind('<KeyRelease>', self.update_strength_meter)
+
+        self.reg_password_show = tk.BooleanVar(value=False)
+        self.show_password_btn = ttk.Checkbutton(
+            password_frame,
+            text="Show",
+            variable=self.reg_password_show,
+            command=self.toggle_password_visibility
+        )
+        self.show_password_btn.pack(side=tk.LEFT)
 
         # Strength meter
         ttk.Label(parent, text="Strength:").grid(row=2, column=0, sticky=tk.W, pady=5)
@@ -399,6 +412,13 @@ class PasswordDefenseSimulator:
             self.feedback_text.insert(tk.END, "\n".join(feedback))
         self.feedback_text.config(state=tk.DISABLED)
 
+    def toggle_password_visibility(self):
+        """Toggle password visibility in registration field."""
+        if self.reg_password_show.get():
+            self.reg_password.config(show="")
+        else:
+            self.reg_password.config(show="*")
+
     def register_user(self):
         """Handle user registration."""
         username = self.reg_username.get()
@@ -414,6 +434,8 @@ class PasswordDefenseSimulator:
             messagebox.showinfo("Success", message)
             self.reg_username.delete(0, tk.END)
             self.reg_password.delete(0, tk.END)
+            self.reg_password_show.set(False)
+            self.reg_password.config(show="*")
             self.feedback_text.config(state=tk.NORMAL)
             self.feedback_text.delete(1.0, tk.END)
             self.feedback_text.config(state=tk.DISABLED)
