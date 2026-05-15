@@ -3,7 +3,8 @@ from tkinter import ttk, messagebox, scrolledtext
 import threading
 from login_system import LoginSystem
 from strength_checker import PasswordStrengthChecker
-from attacks import DictionaryAttack, BruteForceAttack
+from dictionary_attack import DictionaryAttack
+from brute_force_attack import BruteForceAttack
 from password_analysis import PasswordAnalyzer
 
 class PasswordDefenseSimulator:
