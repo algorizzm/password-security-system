@@ -13,5 +13,8 @@
   },
   "Baring": {
     "password_hash": "$2b$12$aTaPkBsR9xgBgvK2IRT7d.wOHF0cm1UKD87ykX/KmaGJPOlV7ZU9i"
+  },
+  "pinkbunny": {
+    "password_hash": "$2b$12$a.FJc0dxPwiOqHbsBskw5ef0xuzTkl2D3NjMR/dTrMBuZrNrxzMp."
   }
 }
