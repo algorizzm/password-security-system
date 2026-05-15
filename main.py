@@ -29,8 +29,8 @@ C_SUCCESS     = "#A6E3A1"
 C_DANGER      = "#F38BA8"
 C_WARNING     = "#FAB387"
 
-# Font constants — family resolved lazily inside apply_theme()
-# (tk.font.families() requires a root window to exist first)
+# Font tuples — populated inside apply_theme() once a root window exists
+# (tkinter.font.families() requires a live Tk instance)
 F_TITLE  = None
 F_HEADER = None
 F_BODY   = None
@@ -343,7 +343,7 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
 
     # ══ tk.Text / ScrolledText (classic widget) ════════════════════
     root.option_add("*Text.background",       C_INPUT)
-    root.option_add("*Text.foreground",       C_TEXT_SEC)
+    root.option_add("*Text.foreground",       C_TEXT_PRI)
     root.option_add("*Text.insertBackground", C_TEXT_PRI)
     root.option_add("*Text.selectBackground", C_ACCENT)
     root.option_add("*Text.selectForeground", C_TEXT_PRI)
@@ -405,51 +405,45 @@ class PasswordDefenseSimulator:
     # ------------------------------------------------------------------
 
     def setup_ui(self):
-        # ── Header bar ────────────────────────────────────────────────
-        header = tk.Frame(self.root, bg="#13131f", pady=0)
+        # ══ HEADER ════════════════════════════════════════════════════
+        header = tk.Frame(self.root, bg="#13131f")
         header.pack(fill=tk.X, side=tk.TOP)
 
-        # accent top-border line
-        tk.Frame(header, bg=C_ACCENT, height=3).pack(fill=tk.X, side=tk.TOP)
+        # top accent line
+        tk.Frame(header, bg=C_ACCENT, height=3).pack(fill=tk.X)
 
-        inner = tk.Frame(header, bg="#13131f")
-        inner.pack(fill=tk.X, padx=28, pady=14)
-
-        # left side — title + subtitle
-        left = tk.Frame(inner, bg="#13131f")
-        left.pack(side=tk.LEFT)
+        # centre block
+        centre = tk.Frame(header, bg="#13131f")
+        centre.pack(anchor=tk.CENTER, pady=(18, 14))
 
         tk.Label(
-            left,
+            centre,
             text="🔐  Password Attack & Defense Simulator",
             bg="#13131f", fg=C_TEXT_PRI,
-            font=(F_TITLE[0] if F_TITLE else "Segoe UI", 16, "bold"),
-            anchor="w",
-        ).pack(anchor=tk.W)
-
-        tk.Label(
-            left,
-            text="For educational and academic purposes only  •  Do not use against systems you do not own",
-            bg="#13131f", fg=C_ACCENT,
-            font=(F_SMALL[0] if F_SMALL else "Segoe UI", 9),
-            anchor="w",
-        ).pack(anchor=tk.W, pady=(3, 0))
-
-        # right side — disclaimer badge
-        badge = tk.Frame(inner, bg="#1e1e35", padx=12, pady=6)
-        badge.pack(side=tk.RIGHT, anchor=tk.CENTER)
-
-        tk.Label(
-            badge,
-            text="⚠  EDUCATIONAL USE ONLY",
-            bg="#1e1e35", fg=C_WARNING,
-            font=(F_SMALL[0] if F_SMALL else "Segoe UI", 9, "bold"),
+            font=(F_TITLE[0], 20, "bold"),
+            anchor="center",
         ).pack()
 
-        # thin bottom divider
-        tk.Frame(header, bg=C_BORDER, height=1).pack(fill=tk.X, side=tk.BOTTOM)
+        tk.Label(
+            centre,
+            text="For educational and academic purposes only  •  Unauthorized use against real systems is illegal and unethical",
+            bg="#13131f", fg=C_ACCENT,
+            font=(F_SMALL[0], 10),
+            anchor="center",
+        ).pack(pady=(5, 0))
 
-        # ── Main content ──────────────────────────────────────────────
+        tk.Label(
+            centre,
+            text="⚠  This tool is strictly a cybersecurity learning demo. All simulations run locally against accounts you create.",
+            bg="#13131f", fg=C_WARNING,
+            font=(F_SMALL[0], 9),
+            anchor="center",
+        ).pack(pady=(4, 0))
+
+        # bottom divider
+        tk.Frame(header, bg=C_BORDER, height=1).pack(fill=tk.X, pady=(14, 0))
+
+        # ══ MAIN CONTENT ══════════════════════════════════════════════
         main_frame = ttk.Frame(self.root, padding="12")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -758,7 +752,7 @@ class PasswordDefenseSimulator:
         # ── Row 8: scrolled console ───────────────────────────────────
         self.progress_text = scrolledtext.ScrolledText(
             parent, height=15, width=45, wrap=tk.WORD,
-            bg="#181825", fg=C_TEXT_SEC, font=F_MONO,
+            bg="#181825", fg=C_TEXT_PRI, font=F_MONO,
             relief="flat", bd=0,
             padx=10, pady=8,
             insertbackground=C_TEXT_PRI,
@@ -853,7 +847,6 @@ class PasswordDefenseSimulator:
         self.stop_attack_button.config(state=tk.NORMAL)
         self.progress_text.config(state=tk.NORMAL)
         self.progress_text.delete(1.0, tk.END)
-        self.progress_text.config(fg=C_TEXT_SEC)
 
         # Start indeterminate progress bar
         self.attack_progressbar.config(mode="indeterminate")
@@ -1104,22 +1097,10 @@ class PasswordDefenseSimulator:
         strength, score, feedback = self.strength_checker.get_strength_level(password)
         color = self.strength_checker.get_strength_color(password)
 
-        # Redraw bar on dark trough
-        self.strength_canvas.update_idletasks()
-        w = self.strength_canvas.winfo_width() or 200
         self.strength_canvas.delete("all")
-        # trough
-        self.strength_canvas.create_rectangle(0, 0, w, 14, fill=C_INPUT, outline="")
-        # fill
-        bar_w = int((score / 100) * w)
-        if bar_w > 0:
-            self.strength_canvas.create_rectangle(0, 0, bar_w, 14, fill=color, outline="")
-
-        self.strength_label.config(
-            text=f"{strength}  ({score}/100)",
-            foreground=color,
-            background=C_BASE,
-        )
+        bar_width = (score / 100) * 200
+        self.strength_canvas.create_rectangle(0, 0, bar_width, 20, fill=color)
+        self.strength_label.config(text=f"{strength} ({score}/100)")
 
         self.feedback_text.config(state=tk.NORMAL)
         self.feedback_text.delete(1.0, tk.END)
