@@ -7,5 +7,11 @@
   },
   "dane": {
     "password_hash": "$2b$12$/hYa1Lxs6t33E1vXN8YtnOw/qhilcgMOdcxg/sLnWzkNLqpBErBj6"
+  },
+  "Dane": {
+    "password_hash": "$2b$12$Phb0FOtTWmm.Tjl3VbVkLe1avzreOXrEPP5cRclrntFAX9c7..aLa"
+  },
+  "Baring": {
+    "password_hash": "$2b$12$aTaPkBsR9xgBgvK2IRT7d.wOHF0cm1UKD87ykX/KmaGJPOlV7ZU9i"
   }
 }
