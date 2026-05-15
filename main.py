@@ -3,10 +3,8 @@ from tkinter import ttk, messagebox, scrolledtext
 import threading
 from login_system import LoginSystem
 from strength_checker import PasswordStrengthChecker
-from attacks import (
-    DictionaryAttack, BruteForceAttack,
-    FastDictionaryAttack, FastBruteForceAttack,
-)
+from dictionary_attack import DictionaryAttack, FastDictionaryAttack
+from brute_force_attack import BruteForceAttack, FastBruteForceAttack
 from password_analysis import PasswordAnalyzer
 
 
@@ -40,6 +38,7 @@ class PasswordDefenseSimulator:
 
         # Attack state
         self.attack_running = False
+        self.attack_paused = False
         self.attack_thread = None
         self.attack_stop_event = threading.Event()
         self._active_attack = None   # holds the live Fast* instance mid-attack
@@ -233,7 +232,7 @@ class PasswordDefenseSimulator:
         ttk.Label(parent, text="Attack Type:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.attack_type = ttk.Combobox(
             parent,
-            values=["Dictionary Attack", "Brute Force (4 chars)"],
+            values=["Dictionary Attack", "Brute Force Attack"],
             state="readonly",
             width=25,
         )
@@ -285,6 +284,11 @@ class PasswordDefenseSimulator:
             button_frame, text="▶  Start Attack", command=self.start_attack
         )
         self.attack_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+
+        self.pause_attack_button = ttk.Button(
+            button_frame, text="⏸  Pause", command=self.toggle_pause, state=tk.DISABLED
+        )
+        self.pause_attack_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
 
         self.stop_attack_button = ttk.Button(
             button_frame, text="⏹  Stop Attack", command=self.stop_attack, state=tk.DISABLED
@@ -338,7 +342,7 @@ class PasswordDefenseSimulator:
         whether threading will help for the selected type.
         """
         attack = self.attack_type.get()
-        if attack == "Brute Force (4 chars)":
+        if attack == "Brute Force Attack":
             note = (
                 "ℹ  Brute-force + bcrypt (12 rounds) ≈ 250 ms/check. "
                 "Higher speed adds threads; still very slow for long passwords."
@@ -371,8 +375,10 @@ class PasswordDefenseSimulator:
             return
 
         self.attack_running = True
+        self.attack_paused = False
         self.attack_stop_event.clear()
         self.attack_button.config(state=tk.DISABLED)
+        self.pause_attack_button.config(state=tk.NORMAL, text="⏸  Pause")
         self.stop_attack_button.config(state=tk.NORMAL)
         self.progress_text.config(state=tk.NORMAL)
         self.progress_text.delete(1.0, tk.END)
@@ -396,8 +402,8 @@ class PasswordDefenseSimulator:
         self.attack_thread.start()
 
     def run_dictionary_attack(self, target: str, speed: int):
-        """Run dictionary attack (fast-forwarded when speed > 1)."""
-        attack = FastDictionaryAttack(speed_multiplier=speed)
+        """Run dictionary attack against rockyou.txt.gz."""
+        attack = FastDictionaryAttack(wordlist_file="rockyou.txt.gz", speed_multiplier=speed)
         self._active_attack = attack
 
         def callback(attempts, elapsed, success, password):
@@ -438,14 +444,41 @@ class PasswordDefenseSimulator:
     def stop_attack(self):
         if self.attack_running:
             self.attack_stop_event.set()
+            # Resume first so workers can unblock and see the stop signal
+            if self.attack_paused and self._active_attack:
+                self._active_attack.resume()
+            self.attack_paused = False
+            self.pause_attack_button.config(state=tk.DISABLED, text="⏸  Pause")
             self.stop_attack_button.config(state=tk.DISABLED)
             self.progress_text.insert(tk.END, "\n[Attack stopped by user]\n")
             self.progress_text.see(tk.END)
 
+    def toggle_pause(self):
+        """Pause or resume the running attack."""
+        if not self.attack_running or self._active_attack is None:
+            return
+
+        if not self.attack_paused:
+            self.attack_paused = True
+            self._active_attack.pause()
+            self.pause_attack_button.config(text="▶  Resume")
+            self.progress_text.config(state=tk.NORMAL)
+            self.progress_text.insert(tk.END, "\n[Attack paused]\n")
+            self.progress_text.see(tk.END)
+        else:
+            self.attack_paused = False
+            self._active_attack.resume()
+            self.pause_attack_button.config(text="⏸  Pause")
+            self.progress_text.config(state=tk.NORMAL)
+            self.progress_text.insert(tk.END, "[Attack resumed]\n")
+            self.progress_text.see(tk.END)
+
     def finalize_attack(self, success: bool, attempts: int, elapsed: float, password):
         self.attack_running = False
+        self.attack_paused = False
         self._active_attack = None
         self.attack_button.config(state=tk.NORMAL)
+        self.pause_attack_button.config(state=tk.DISABLED, text="⏸  Pause")
         self.stop_attack_button.config(state=tk.DISABLED)
 
         is_stopped = self.attack_stop_event.is_set()
