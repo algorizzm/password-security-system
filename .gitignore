@@ -1,0 +1,19 @@
+# Ignore Python cache directories (fixes your recent errors!)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore local environment files (passwords, API keys)
+.env
+auth.json
+
+# Ignore virtual environments
+venv/
+.venv/
+env/
+
+# Ignore IDE-specific folders
+.vscode/
+.idea/__pycache__/
+*.pyc
