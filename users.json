@@ -16,5 +16,8 @@
   },
   "pinkbunny": {
     "password_hash": "$2b$12$a.FJc0dxPwiOqHbsBskw5ef0xuzTkl2D3NjMR/dTrMBuZrNrxzMp."
+  },
+  "Jeddui": {
+    "password_hash": "$2b$12$iGfaFOABz7m0uF.Zoo8V2uhc7NlBr0pRQlXH2klC2XNXWAjWopJ8S"
   }
 }

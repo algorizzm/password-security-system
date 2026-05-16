@@ -75,7 +75,6 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
 
     # ══ TFrame ════════════════════════════════════════════════════
     style.configure("TFrame", background=C_BASE)
-    # Card.TFrame — secondary elevation (panels, containers)
     style.configure("Card.TFrame",
         background=C_CARD,
         relief="flat",
@@ -88,7 +87,6 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
         foreground=C_TEXT_SEC,
         font=F_BODY,
     )
-    # Labels that live inside Card.TFrame / LabelFrame must share the card bg
     style.configure("Card.TLabel",
         background=C_CARD,
         foreground=C_TEXT_SEC,
@@ -131,7 +129,6 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
     )
 
     # ══ TLabelFrame ═══════════════════════════════════════════════
-    # Flat elevation: card bg + accent-coloured title text
     style.configure("TLabelframe",
         background=C_CARD,
         foreground=C_ACCENT,
@@ -187,12 +184,9 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
             ("disabled", C_CARD),
             ("pressed",  C_BORDER),
         ],
-        foreground=[
-            ("disabled", C_TEXT_MUT),
-        ],
+        foreground=[("disabled", C_TEXT_MUT)],
         relief=[("pressed", "flat")],
     )
-    # Ghost / secondary button
     style.configure("Ghost.TButton",
         background=C_CARD,
         foreground=C_TEXT_SEC,
@@ -206,7 +200,6 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
         background=[("active", C_BORDER), ("disabled", C_INPUT)],
         foreground=[("disabled", C_TEXT_MUT)],
     )
-    # Danger button (Stop Attack)
     style.configure("Danger.TButton",
         background="#313244",
         foreground=C_DANGER,
@@ -265,7 +258,6 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
         lightcolor=[("focus", C_ACCENT)],
         darkcolor=[("focus", C_ACCENT)],
     )
-    # Dropdown list colours (option_add is the only reliable way)
     root.option_add("*TCombobox*Listbox.background",       C_CARD)
     root.option_add("*TCombobox*Listbox.foreground",       C_TEXT_SEC)
     root.option_add("*TCombobox*Listbox.selectBackground", C_ACCENT)
@@ -288,7 +280,6 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
     )
 
     # ══ TProgressbar ══════════════════════════════════════════════
-    # Sleek thin bar — accent fill on dark trough
     style.configure("Accent.Horizontal.TProgressbar",
         troughcolor=C_INPUT,
         background=C_ACCENT,
@@ -300,7 +291,7 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
         borderwidth=0,
     )
 
-    # ══ TScale (speed slider) ══════════════════════════════════════
+    # ══ TScale ════════════════════════════════════════════════════
     style.configure("TScale",
         background=C_BASE,
         troughcolor=C_INPUT,
@@ -331,7 +322,7 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
     # ══ TSeparator ════════════════════════════════════════════════
     style.configure("TSeparator", background=C_BORDER)
 
-    # ══ Listbox (classic widget — option_add only) ═════════════════
+    # ══ Listbox ═══════════════════════════════════════════════════
     root.option_add("*Listbox.background",       C_INPUT)
     root.option_add("*Listbox.foreground",       C_TEXT_SEC)
     root.option_add("*Listbox.selectBackground", C_ACCENT)
@@ -341,7 +332,7 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
     root.option_add("*Listbox.relief",           "flat")
     root.option_add("*Listbox.activestyle",      "none")
 
-    # ══ tk.Text / ScrolledText (classic widget) ════════════════════
+    # ══ tk.Text / ScrolledText ════════════════════════════════════
     root.option_add("*Text.background",       C_INPUT)
     root.option_add("*Text.foreground",       C_TEXT_PRI)
     root.option_add("*Text.insertBackground", C_TEXT_PRI)
@@ -352,7 +343,7 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
     root.option_add("*Text.borderWidth",      "0")
     root.option_add("*Text.highlightThickness", "0")
 
-    # ══ Canvas (strength bar background) ══════════════════════════
+    # ══ Canvas ════════════════════════════════════════════════════
     root.option_add("*Canvas.background",         C_INPUT)
     root.option_add("*Canvas.highlightThickness", "0")
 
@@ -362,7 +353,6 @@ def apply_theme(root: tk.Tk) -> ttk.Style:
 class PasswordDefenseSimulator:
     """Main GUI application for password attack/defense simulation."""
 
-    # Maps slider integer → display label
     _SPEED_LABELS = {
         1: "1x  (1 thread)",
         2: "2x  (2 threads)",
@@ -382,20 +372,17 @@ class PasswordDefenseSimulator:
         self.root.state("zoomed")
         self.root.resizable(True, True)
 
-        # Apply theme BEFORE any widgets are created
         self.style = apply_theme(root)
 
-        # Core systems
         self.login_system = LoginSystem()
         self.strength_checker = PasswordStrengthChecker()
         self.dict_attack = DictionaryAttack()
 
-        # Attack state
         self.attack_running = False
         self.attack_paused = False
         self.attack_thread = None
         self.attack_stop_event = threading.Event()
-        self._active_attack = None   # holds the live Fast* instance mid-attack
+        self._active_attack = None
 
         self.setup_ui()
         self.refresh_attack_targets()
@@ -405,14 +392,11 @@ class PasswordDefenseSimulator:
     # ------------------------------------------------------------------
 
     def setup_ui(self):
-        # ══ HEADER ════════════════════════════════════════════════════
         header = tk.Frame(self.root, bg="#13131f")
         header.pack(fill=tk.X, side=tk.TOP)
 
-        # top accent line
         tk.Frame(header, bg=C_ACCENT, height=3).pack(fill=tk.X)
 
-        # centre block
         centre = tk.Frame(header, bg="#13131f")
         centre.pack(anchor=tk.CENTER, pady=(18, 14))
 
@@ -440,10 +424,8 @@ class PasswordDefenseSimulator:
             anchor="center",
         ).pack(pady=(4, 0))
 
-        # bottom divider
         tk.Frame(header, bg=C_BORDER, height=1).pack(fill=tk.X, pady=(14, 0))
 
-        # ══ MAIN CONTENT ══════════════════════════════════════════════
         main_frame = ttk.Frame(self.root, padding="12")
         main_frame.pack(fill=tk.BOTH, expand=True)
 
@@ -489,15 +471,37 @@ class PasswordDefenseSimulator:
         password_frame.grid(row=1, column=1, sticky=tk.EW, pady=(8, 4))
 
         self.reg_password = ttk.Entry(password_frame, width=30, show="*")
-        self.reg_password.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 6))
+        self.reg_password.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
         self.reg_password.bind("<KeyRelease>", self.update_strength_meter)
 
+        # ── Show / Hide password toggle ───────────────────────────────
+        # Uses a plain tk.Button so we can fully control bg, fg, and the
+        # Unicode checkbox glyphs without ttk indicator interference.
+        #
+        #   Hidden  →  ☐  Show Password   (muted foreground, dark border)
+        #   Visible →  ☑  Hide Password   (accent foreground, accent border)
         self.reg_password_show = tk.BooleanVar(value=False)
-        ttk.Checkbutton(
-            password_frame, text="Show",
-            variable=self.reg_password_show,
+
+        self._pw_toggle_btn = tk.Button(
+            password_frame,
+            text="☐  Show Password",
             command=self.toggle_password_visibility,
-        ).pack(side=tk.LEFT)
+            # Hidden-state colours (defaults)
+            bg=C_CARD,
+            fg=C_TEXT_MUT,
+            activebackground=C_BORDER,
+            activeforeground=C_TEXT_PRI,
+            font=(F_SMALL[0], 9),
+            relief="flat",
+            bd=0,
+            cursor="hand2",
+            padx=8,
+            pady=4,
+            highlightthickness=1,
+            highlightbackground=C_BORDER,
+            highlightcolor=C_ACCENT,
+        )
+        self._pw_toggle_btn.pack(side=tk.LEFT)
 
         ttk.Label(parent, text="Strength:").grid(row=2, column=0, sticky=tk.W, pady=(8, 4))
         strength_frame = ttk.Frame(parent)
@@ -655,14 +659,12 @@ class PasswordDefenseSimulator:
     # ------------------------------------------------------------------
 
     def setup_attack_simulator(self, parent):
-        # ── Row 0: target user ────────────────────────────────────────
         ttk.Label(parent, text="Target User:").grid(row=0, column=0, sticky=tk.W, pady=(0, 4))
         self.attack_target = ttk.Combobox(parent, width=25, state="readonly")
         self.attack_target.grid(row=0, column=1, sticky=tk.EW, pady=(0, 4))
         ttk.Button(parent, text="↻ Refresh", command=self.refresh_attack_targets,
                    style="Ghost.TButton").grid(row=0, column=2, pady=(0, 4), padx=(6, 0))
 
-        # ── Row 1: attack type ────────────────────────────────────────
         ttk.Label(parent, text="Attack Type:").grid(row=1, column=0, sticky=tk.W, pady=(8, 4))
         self.attack_type = ttk.Combobox(
             parent,
@@ -674,7 +676,6 @@ class PasswordDefenseSimulator:
         self.attack_type.grid(row=1, column=1, columnspan=2, sticky=tk.EW, pady=(8, 4))
         self.attack_type.bind("<<ComboboxSelected>>", self._on_attack_type_changed)
 
-        # ── Row 2: speed slider ───────────────────────────────────────
         ttk.Label(parent, text="Speed:").grid(row=2, column=0, sticky=tk.W, pady=(8, 2))
 
         slider_frame = ttk.Frame(parent)
@@ -700,7 +701,6 @@ class PasswordDefenseSimulator:
         )
         self.speed_value_label.pack(side=tk.LEFT, padx=(8, 0))
 
-        # ── Row 3: speed note ─────────────────────────────────────────
         self.speed_note_label = ttk.Label(
             parent,
             text="ℹ Speed control is available for both attack types.",
@@ -708,7 +708,6 @@ class PasswordDefenseSimulator:
         )
         self.speed_note_label.grid(row=3, column=0, columnspan=3, sticky=tk.W, pady=(0, 8))
 
-        # ── Row 4: control buttons ────────────────────────────────────
         button_frame = ttk.Frame(parent)
         button_frame.grid(row=4, column=0, columnspan=3, sticky=tk.EW, pady=(0, 10))
 
@@ -729,7 +728,6 @@ class PasswordDefenseSimulator:
         )
         self.stop_attack_button.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # ── Row 5: progress bar ───────────────────────────────────────
         prog_header = ttk.Frame(parent)
         prog_header.grid(row=5, column=0, columnspan=3, sticky=tk.EW, pady=(4, 2))
         ttk.Label(prog_header, text="Attack Progress:").pack(side=tk.LEFT)
@@ -744,12 +742,10 @@ class PasswordDefenseSimulator:
         )
         self.attack_progressbar.grid(row=6, column=0, columnspan=3, sticky=tk.EW, pady=(0, 10))
 
-        # ── Row 7: live console label ─────────────────────────────────
         ttk.Label(parent, text="Live Console:").grid(
             row=7, column=0, columnspan=3, sticky=tk.W, pady=(4, 4)
         )
 
-        # ── Row 8: scrolled console ───────────────────────────────────
         self.progress_text = scrolledtext.ScrolledText(
             parent, height=15, width=45, wrap=tk.WORD,
             bg="#181825", fg=C_TEXT_PRI, font=F_MONO,
@@ -760,13 +756,11 @@ class PasswordDefenseSimulator:
             selectforeground=C_TEXT_PRI,
         )
         self.progress_text.grid(row=8, column=0, columnspan=3, sticky=tk.NSEW, pady=(0, 10))
-        # Style the embedded scrollbar
         self.progress_text.vbar.configure(
             bg=C_CARD, troughcolor=C_INPUT,
             activebackground=C_ACCENT, relief="flat", bd=0,
         )
 
-        # ── Row 9: results summary ────────────────────────────────────
         ttk.Label(parent, text="Results:").grid(
             row=9, column=0, columnspan=3, sticky=tk.W, pady=(4, 2)
         )
@@ -785,13 +779,11 @@ class PasswordDefenseSimulator:
     # ------------------------------------------------------------------
 
     def _on_speed_changed(self, _event=None):
-        """Keep speed label in sync with slider position (fires while dragging)."""
         val = int(round(self._speed_var.get()))
         self._speed_var.set(val)
         self.speed_value_label.config(text=self._SPEED_LABELS[val])
 
     def _on_speed_released(self, _event=None):
-        """Apply the new speed to the live attack once the user releases the slider."""
         if self.attack_running and self._active_attack is not None:
             self._active_attack.set_speed(self._current_speed())
             self.progress_text.config(state=tk.NORMAL)
@@ -802,10 +794,6 @@ class PasswordDefenseSimulator:
             self.progress_text.see(tk.END)
 
     def _on_attack_type_changed(self, _event=None):
-        """
-        The slider is always visible but the note text updates to reflect
-        whether threading will help for the selected type.
-        """
         attack = self.attack_type.get()
         if attack == "Brute Force Attack":
             note = (
@@ -820,7 +808,6 @@ class PasswordDefenseSimulator:
         self.speed_note_label.config(text=note)
 
     def _current_speed(self) -> int:
-        """Return the slider value as a snapped integer (1–10)."""
         return max(1, min(10, int(round(self._speed_var.get()))))
 
     # ------------------------------------------------------------------
@@ -848,7 +835,6 @@ class PasswordDefenseSimulator:
         self.progress_text.config(state=tk.NORMAL)
         self.progress_text.delete(1.0, tk.END)
 
-        # Start indeterminate progress bar
         self.attack_progressbar.config(mode="indeterminate")
         self.attack_progressbar.start(12)
         self._prog_status.config(text="Running…")
@@ -872,7 +858,6 @@ class PasswordDefenseSimulator:
         self.attack_thread.start()
 
     def run_dictionary_attack(self, target: str, speed: int):
-        """Run dictionary attack against rockyou.txt.gz."""
         attack = FastDictionaryAttack(wordlist_file="rockyou.txt.gz", speed_multiplier=speed)
         self._active_attack = attack
 
@@ -889,7 +874,6 @@ class PasswordDefenseSimulator:
         self.root.after(0, lambda: self.finalize_attack(success, attempts, elapsed, password))
 
     def run_brute_force_attack(self, target: str, speed: int):
-        """Run brute-force attack (fast-forwarded when speed > 1)."""
         attack = FastBruteForceAttack(max_length=4, speed_multiplier=speed)
         self._active_attack = attack
 
@@ -909,7 +893,6 @@ class PasswordDefenseSimulator:
         self.progress_text.insert(tk.END, message + "\n")
         self.progress_text.see(tk.END)
         if success:
-            # Tag the success line green without changing the whole widget fg
             last_line_start = self.progress_text.index("end-2l linestart")
             last_line_end   = self.progress_text.index("end-1l lineend")
             self.progress_text.tag_add("success", last_line_start, last_line_end)
@@ -918,7 +901,6 @@ class PasswordDefenseSimulator:
     def stop_attack(self):
         if self.attack_running:
             self.attack_stop_event.set()
-            # Resume first so workers can unblock and see the stop signal
             if self.attack_paused and self._active_attack:
                 self._active_attack.resume()
             self.attack_paused = False
@@ -928,7 +910,6 @@ class PasswordDefenseSimulator:
             self.progress_text.see(tk.END)
 
     def toggle_pause(self):
-        """Pause or resume the running attack."""
         if not self.attack_running or self._active_attack is None:
             return
 
@@ -955,7 +936,6 @@ class PasswordDefenseSimulator:
         self.pause_attack_button.config(state=tk.DISABLED, text="⏸  Pause")
         self.stop_attack_button.config(state=tk.DISABLED)
 
-        # Stop progress bar
         self.attack_progressbar.stop()
         self.attack_progressbar.config(mode="determinate", value=100)
         self._prog_status.config(text="Done")
@@ -986,7 +966,7 @@ class PasswordDefenseSimulator:
         self.progress_text.config(state=tk.DISABLED)
 
     # ------------------------------------------------------------------
-    # Helper / shared methods (unchanged logic, kept intact)
+    # Helper / shared methods
     # ------------------------------------------------------------------
 
     def refresh_analysis_users(self):
@@ -1109,7 +1089,32 @@ class PasswordDefenseSimulator:
         self.feedback_text.config(state=tk.DISABLED)
 
     def toggle_password_visibility(self):
-        self.reg_password.config(show="" if self.reg_password_show.get() else "*")
+        """
+        Toggle between showing and hiding the registration password.
+
+        Hidden  (default) : show="*"  →  ☐  Show Password   (muted text, dark border)
+        Visible           : show=""   →  ☑  Hide Password   (accent text, accent border)
+        """
+        currently_visible = self.reg_password_show.get()
+
+        if currently_visible:
+            # Switch → hidden
+            self.reg_password_show.set(False)
+            self.reg_password.config(show="*")
+            self._pw_toggle_btn.config(
+                text="☐  Show Password",
+                fg=C_TEXT_MUT,
+                highlightbackground=C_BORDER,
+            )
+        else:
+            # Switch → visible
+            self.reg_password_show.set(True)
+            self.reg_password.config(show="")
+            self._pw_toggle_btn.config(
+                text="☑  Hide Password",
+                fg=C_ACCENT,
+                highlightbackground=C_ACCENT,
+            )
 
     def register_user(self):
         username = self.reg_username.get()
@@ -1123,8 +1128,14 @@ class PasswordDefenseSimulator:
             messagebox.showinfo("Success", message)
             self.reg_username.delete(0, tk.END)
             self.reg_password.delete(0, tk.END)
+            # Always reset toggle to hidden state after successful registration
             self.reg_password_show.set(False)
             self.reg_password.config(show="*")
+            self._pw_toggle_btn.config(
+                text="☐  Show Password",
+                fg=C_TEXT_MUT,
+                highlightbackground=C_BORDER,
+            )
             self.feedback_text.config(state=tk.NORMAL)
             self.feedback_text.delete(1.0, tk.END)
             self.feedback_text.config(state=tk.DISABLED)
